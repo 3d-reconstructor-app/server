@@ -1,7 +1,6 @@
 import subprocess
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 import os
-from time import sleep
 import json
 import zipfile
 
@@ -27,9 +26,8 @@ def run_calculations(id):
     os.chdir('../../..')
 
     # copy example
-    # sleep(3)
-    # with open('resources/' + id + '/res.png', 'wb') as res:
-    #     with open('resources/' + id + '/images/im1.png', 'rb') as image:
+    # with open('resources/' + id + '/res.ply', 'wb') as res:
+    #     with open('resources/pmvs_options.txt.ply', 'rb') as image:
     #         res.write(image.read())
     # end of your code
     id_dict[id] = -2
@@ -42,10 +40,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         res_path = os.path.abspath('resources')
         length = self.headers['content-length']
         type = self.headers['content-type']
-        print('type = ' + type)
         if type == 'application/zip':
             id = os.path.dirname(self.path)[1:].replace('/images', '')
-            print('id in POST = ' + id)
 
             if id in id_dict:
                 if id_dict[id] >= 0:
@@ -53,13 +49,10 @@ class MyHandler(SimpleHTTPRequestHandler):
                     with open(res_path + self.path, 'wb') as f:
                         f.write(data)
                     id_dict[id] += 1
-                    print('add file: ' + self.path)
-                print('id_dict[id] = ' + str(id_dict[id]) + ' id_max[id] = ' + str(id_max[id]))
                 if id_dict[id] == id_max[id]:
                     run_calculations(id)
         if type == 'application/json; charset=utf-8':
             data = self.rfile.read(int(length))
-            print('self.res_path + self.path : ' + res_path + self.path)
             if not os.path.exists(res_path + self.path):
                 with open(res_path + self.path, 'wb') as f:
                     f.write(data)
@@ -76,15 +69,12 @@ class MyHandler(SimpleHTTPRequestHandler):
                         id_max[id] = int(num)
                         id_name[id] = name
                 os.remove(res_path + self.path)
-                print('add: ' + id)
         self.send_response(200)
         self.end_headers()
 
     def do_GET(self):
-        print('self.path in GET = ' + self.path)
         f = self.send_head()
         id = os.path.dirname(self.path).replace('/resources/', '').replace('/reconstruction_sequential/PMVS/models', '')
-        print('id in GET = ' + id)
 
         if id in id_dict and id_dict[id] == -2:
             if f:
